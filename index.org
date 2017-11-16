@@ -415,5 +415,7 @@ https://herbsutter.com/gotw/
 * merci
 
 Source Images: giphy.com
+
 Edité avec Emacs 25.2.1
+
 Présentation: Org + reveal.js

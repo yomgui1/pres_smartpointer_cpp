@@ -26,21 +26,21 @@
 <body>
 <div class="reveal">
 <div class="slides">
-<section id="sec-title-slide"><h1 class="title">Smart-Pointers</h1><h2 class="author">Guillaume Roguez </h2><p class="date">Created: 2017-11-16 jeu 14:52</p>
+<section id="sec-title-slide"><h1 class="title">Smart-Pointers</h1><h2 class="author">Guillaume Roguez </h2><p class="date">Created: 2017-11-16 jeu 15:06</p>
 </section>
 
 <section>
-<section id="slide-orge6b21f4">
-<h2 id="orge6b21f4">Le problème</h2>
-<div class="outline-text-2" id="text-orge6b21f4">
+<section id="slide-org6432c1d">
+<h2 id="org6432c1d">Le problème</h2>
+<div class="outline-text-2" id="text-org6432c1d">
 </div>
 </section>
-<section id="slide-org408bbcf" data-background="https://media.giphy.com/media/2RiU1RUjyh4C4/giphy.gif" data-background-transition="slide">
-<h3 id="org408bbcf">Les pointeurs</h3>
+<section id="slide-org2c8cb3c" data-background="https://media.giphy.com/media/2RiU1RUjyh4C4/giphy.gif" data-background-transition="slide">
+<h3 id="org2c8cb3c">Les pointeurs</h3>
 
 </section>
-<section id="slide-org06dc51c">
-<h3 id="org06dc51c">Les pointeurs sont</h3>
+<section id="slide-org4887c8b">
+<h3 id="org4887c8b">Les pointeurs sont</h3>
 <ul>
 <li class="fragment">géniaux</li>
 <li class="fragment">puissants</li>
@@ -53,8 +53,8 @@ la 1ère source de bugs!
 </p>
 
 </section>
-<section id="slide-orgf8d98ed">
-<h3 id="orgf8d98ed">Pointeurs et C++</h3>
+<section id="slide-org170eb7b">
+<h3 id="org170eb7b">Pointeurs et C++</h3>
 <p class="fragment (t)">
 <code>new</code> et <code>delete</code> sont sur un bateau&#x2026;
 </p>
@@ -78,8 +78,8 @@ Qu'est-ce qui reste?
 </p>
 
 </section>
-<section id="slide-org515470e">
-<h3 id="org515470e">Des bugs!</h3>
+<section id="slide-org6e1a7f8">
+<h3 id="org6e1a7f8">Des bugs!</h3>
 <ul>
 <li class="fragment">Oublier 'delete' = perte mémoire<br />
 <i>(catastrophe sur un système avec peu de ressources)</i></li>
@@ -91,8 +91,8 @@ Qu'est-ce qui reste?
 </ul>
 
 </section>
-<section id="slide-orge98cfff" data-background="https://media.giphy.com/media/rW6pMWrNZ2cPm/giphy.gif" data-background-transition="slide">
-<h3 id="orge98cfff">Allocation et destruction</h3>
+<section id="slide-orgbebc82d" data-background="https://media.giphy.com/media/rW6pMWrNZ2cPm/giphy.gif" data-background-transition="slide">
+<h3 id="orgbebc82d">Allocation et destruction</h3>
 <p class="fragment grow">
 Une paire indissociable
 </p>
@@ -100,8 +100,8 @@ Une paire indissociable
 </section>
 </section>
 <section>
-<section id="slide-org2410a8d">
-<h2 id="org2410a8d">Solution?</h2>
+<section id="slide-org5e37e30">
+<h2 id="org5e37e30">Solution?</h2>
 <p>
 (adapté au C++)
 </p>
@@ -109,8 +109,8 @@ Une paire indissociable
 </section>
 </section>
 <section>
-<section id="slide-org5ee20bd">
-<h2 id="org5ee20bd"><b>R. A. I. I.</b></h2>
+<section id="slide-org554e87e">
+<h2 id="org554e87e"><b>R. A. I. I.</b></h2>
 </section>
 <section >
 
@@ -145,8 +145,8 @@ public:
 </div>
 
 </section>
-<section id="slide-org04c59f6">
-<h3 id="org04c59f6">Bénéfices</h3>
+<section id="slide-org2a10797">
+<h3 id="org2a10797">Bénéfices</h3>
 <ul>
 <li class="fragment">éviter l'oublis de l'associativité (bug!)</li>
 <li class="fragment">simplifier la maintenance du code</li>
@@ -176,8 +176,8 @@ public:
 </section>
 </section>
 <section>
-<section id="slide-org2daede0">
-<h2 id="org2daede0">RAII et pointeurs</h2>
+<section id="slide-orge972972">
+<h2 id="orge972972">RAII et pointeurs</h2>
 <div class="org-src-container">
 
 <pre><code class="c++" >class MyTypeSafePtr {
@@ -214,13 +214,13 @@ my_ptr.ptr->do_something_else();
 </section>
 </section>
 <section>
-<section id="slide-org4473be5">
-<h2 id="org4473be5">Et c'est tout?</h2>
-<div class="outline-text-2" id="text-org4473be5">
+<section id="slide-org0466938">
+<h2 id="org0466938">Et c'est tout?</h2>
+<div class="outline-text-2" id="text-org0466938">
 </div>
 </section>
-<section id="slide-orgcaeaa0f">
-<h3 id="orgcaeaa0f">Amélioration #1</h3>
+<section id="slide-orgb8270f2">
+<h3 id="orgb8270f2">Amélioration #1</h3>
 <p>
 concept de <i>propriété</i>
 </p>
@@ -282,8 +282,8 @@ my_ptr.get().mytype_method();
 </div>
 
 </section>
-<section id="slide-orga71a834">
-<h3 id="orga71a834">Amélioration #2</h3>
+<section id="slide-orgb714b6e">
+<h3 id="orgb714b6e">Amélioration #2</h3>
 <p>
 Oublier l'effet <i>conteneur</i>
 </p>
@@ -328,8 +328,8 @@ foo(*my_ptr); // par réference
 </p>
 
 </section>
-<section id="slide-org26a032d">
-<h3 id="org26a032d">Amélioration #3</h3>
+<section id="slide-org28776d0">
+<h3 id="org28776d0">Amélioration #3</h3>
 <p>
 Programmation générique =&gt; <b>template</b>
 </p>
@@ -368,8 +368,8 @@ Utilisation
 </section>
 </section>
 <section>
-<section id="slide-orgf358704">
-<h2 id="orgf358704">Trop de code pour vous?</h2>
+<section id="slide-orgd0fac8c">
+<h2 id="orgd0fac8c">Trop de code pour vous?</h2>
 <ul>
 <li>&lt;memory&gt; de la STL (Standard Template Library)</li>
 <li>Depuis C++11</li>
@@ -377,8 +377,8 @@ Utilisation
 </ul>
 
 </section>
-<section id="slide-org5a70758">
-<h3 id="org5a70758"><code>std::unique_ptr&lt;&gt;</code></h3>
+<section id="slide-orgc7f53b5">
+<h3 id="orgc7f53b5"><code>std::unique_ptr&lt;&gt;</code></h3>
 <ul>
 <li class="fragment">Propriété unique sur un pointeur</li>
 <li class="fragment">Comme notre exemple précédent mais en mieux
@@ -399,8 +399,8 @@ Utilisation
 </ul>
 
 </section>
-<section id="slide-org2377f55">
-<h3 id="org2377f55"><code>std::shared_ptr&lt;&gt;</code></h3>
+<section id="slide-orgbc367f0">
+<h3 id="orgbc367f0"><code>std::shared_ptr&lt;&gt;</code></h3>
 <ul>
 <li class="fragment">A utiliser quand on ne sais pas qui est le responsable</li>
 <li class="fragment">Plus complexe qu'un <code>std::unique_ptr</code>
@@ -418,8 +418,8 @@ Utilisation
 </ul>
 
 </section>
-<section id="slide-org99788a2">
-<h3 id="org99788a2"><code>std::weak_ptr&lt;&gt;</code></h3>
+<section id="slide-orgd376cdf">
+<h3 id="orgd376cdf"><code>std::weak_ptr&lt;&gt;</code></h3>
 <ul>
 <li class="fragment">Avoir l'accès à un <code>shared_ptr</code> sans augmenter le compteur de référence</li>
 <li class="fragment">Concept de "vue"</li>
@@ -440,13 +440,13 @@ Utilisation
 </section>
 </section>
 <section>
-<section id="slide-orgd6f2119">
-<h2 id="orgd6f2119">Performances</h2>
-<div class="outline-text-2" id="text-orgd6f2119">
+<section id="slide-org405b1d3">
+<h2 id="org405b1d3">Performances</h2>
+<div class="outline-text-2" id="text-org405b1d3">
 </div>
 </section>
-<section id="slide-org8f01512">
-<h3 id="org8f01512"><code>std::unique_ptr&lt;&gt;</code></h3>
+<section id="slide-org72551a8">
+<h3 id="org72551a8"><code>std::unique_ptr&lt;&gt;</code></h3>
 <p>
 <b>Almost Zero-Overhead</b>
 </p>
@@ -460,8 +460,8 @@ Utilisation
 </ul>
 
 </section>
-<section id="slide-org63c68aa">
-<h3 id="org63c68aa"><code>std::shared_ptr&lt;&gt;</code></h3>
+<section id="slide-org2ec6df7">
+<h3 id="org2ec6df7"><code>std::shared_ptr&lt;&gt;</code></h3>
 <ul>
 <li class="fragment">Beaucoup moins performant que <code>std::unique_ptr</code></li>
 <li class="fragment">Contient un compteur et un <i>mutex</i></li>
@@ -471,8 +471,8 @@ Utilisation
 </ul>
 
 </section>
-<section id="slide-org5db257d">
-<h3 id="org5db257d"><code>std::weak_ptr&lt;&gt;</code></h3>
+<section id="slide-org7943940">
+<h3 id="org7943940"><code>std::weak_ptr&lt;&gt;</code></h3>
 <ul>
 <li class="fragment">Référence sur la mémoire partagée</li>
 <li class="fragment">Accéde aussi au mutex partagé entre les shared<sub>ptr</sub>&lt;&gt;</li>
@@ -482,8 +482,8 @@ Utilisation
 </section>
 </section>
 <section>
-<section id="slide-org2415f45">
-<h2 id="org2415f45">La fin du pointeur brut?</h2>
+<section id="slide-org4ef3c08">
+<h2 id="org4ef3c08">La fin du pointeur brut?</h2>
 <p class="fragment (t)">
 Non! Tout comme la référence (&amp;) il transporte une information utile
 </p>
@@ -494,8 +494,8 @@ Il indique clairement que vous n'êtes pas le propriétaire<br />
 </p>
 
 </section>
-<section id="slide-org5cef482">
-<h3 id="org5cef482">Règles avec le passage en arguments</h3>
+<section id="slide-org2407380">
+<h3 id="org2407380">Règles avec le passage en arguments</h3>
 <ol>
 <li class="fragment">Préférez &amp;, ou * (pour indiquer une possible valeur à nullptr)</li>
 <li class="fragment">Pas de <i>smart pointer</i> sauf si vous utilisez/modifiez ce dernier</li>
@@ -505,15 +505,15 @@ Il indique clairement que vous n'êtes pas le propriétaire<br />
 </section>
 </section>
 <section>
-<section id="slide-org59a47a0">
-<h2 id="org59a47a0">Pièges</h2>
+<section id="slide-orgb55939b">
+<h2 id="orgb55939b">Pièges</h2>
 <p>
 Quelques exemples à ne pas suivre&#x2026;
 </p>
 
 </section>
-<section id="slide-org44987cf">
-<h3 id="org44987cf">Vol de pointeur</h3>
+<section id="slide-orgae723f2">
+<h3 id="orgae723f2">Vol de pointeur</h3>
 <div class="org-src-container">
 
 <pre><code class="c++" >void method(const Widget& widget)
@@ -524,13 +524,13 @@ Quelques exemples à ne pas suivre&#x2026;
 </div>
 
 </section>
-<section id="slide-org404fc76">
-<h3 id="org404fc76">Solution miracle</h3>
-<div class="outline-text-3" id="text-org404fc76">
+<section id="slide-org92aa666">
+<h3 id="org92aa666">Solution miracle</h3>
+<div class="outline-text-3" id="text-org92aa666">
 </div>
 </section>
-<section id="slide-org9b2958d">
-<h4 id="org9b2958d">Quel est/sont le/les problème(s)?</h4>
+<section id="slide-orgcf53482">
+<h4 id="orgcf53482">Quel est/sont le/les problème(s)?</h4>
 <div class="org-src-container">
 
 <pre><code class="c++" >void foo(std::unique_ptr< Widget > w1,
@@ -541,8 +541,8 @@ foo(new Widget1, new Widget2);
 </div>
 
 </section>
-<section id="slide-org8c958d3">
-<h4 id="org8c958d3">Est-ce mieux?</h4>
+<section id="slide-orgd6bdc6d">
+<h4 id="orgd6bdc6d">Est-ce mieux?</h4>
 <div class="org-src-container">
 
 <pre><code class="c++" >void foo(std::unique_ptr< Widget > w1,
@@ -554,8 +554,8 @@ foo(std::unique_ptr< Widget >(new Widget),
 </div>
 
 </section>
-<section id="slide-org1f808bd">
-<h4 id="org1f808bd">La bonne solution&#x2026;</h4>
+<section id="slide-orgd0fab4c">
+<h4 id="orgd0fab4c">La bonne solution&#x2026;</h4>
 <div class="org-src-container">
 
 <pre><code class="c++" >void foo(std::unique_ptr< Widget > w1,
@@ -569,8 +569,8 @@ foo(std::make_unique< Widget >(),
 </section>
 </section>
 <section>
-<section id="slide-orga4e4e05">
-<h2 id="orga4e4e05">A retenir</h2>
+<section id="slide-org0154660">
+<h2 id="org0154660">A retenir</h2>
 <p>
 Ordre d'utilisation des trois <i>smart-pointers</i>
 </p>
@@ -616,8 +616,8 @@ Ordre d'utilisation des trois <i>smart-pointers</i>
 </section>
 </section>
 <section>
-<section id="slide-org17309e6">
-<h2 id="org17309e6">Plus de détails</h2>
+<section id="slide-orgdc17f15">
+<h2 id="orgdc17f15">Plus de détails</h2>
 <p>
 La référence<br />
 <a href="http://en.cppreference.com/w/cpp/memory">http://en.cppreference.com/w/cpp/memory</a>
@@ -631,17 +631,23 @@ Ma source sur le sujet<br />
 </section>
 </section>
 <section>
-<section id="slide-orgbcd10e5" data-background="https://media.giphy.com/media/aZKNik5nLC8Mw/giphy-downsized-large.gif" data-background-transition="slide">
-<h2 id="orgbcd10e5">Questions</h2>
+<section id="slide-org03dfaad" data-background="https://media.giphy.com/media/aZKNik5nLC8Mw/giphy-downsized-large.gif" data-background-transition="slide">
+<h2 id="org03dfaad">Questions</h2>
 
 </section>
 </section>
 <section>
-<section id="slide-orgc662334">
-<h2 id="orgc662334">merci</h2>
+<section id="slide-orgfc1f208">
+<h2 id="orgfc1f208">merci</h2>
 <p>
 Source Images: giphy.com
+</p>
+
+<p>
 Edité avec Emacs 25.2.1
+</p>
+
+<p>
 Présentation: Org + reveal.js
 </p>
 </section>
