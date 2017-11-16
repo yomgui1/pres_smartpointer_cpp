@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Smart-Pointers</title>
+<meta name="author" content="(Guillaume Roguez )"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/reveal.js/3.0.0/css/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/reveal.js/3.0.0/css/theme/league.css" id="theme"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/reveal.js/3.0.0/lib/css/zenburn.css"/>
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/reveal.js/3.0.0/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Smart-Pointers</h1><h2 class="author">Guillaume Roguez </h2><p class="date">Created: 2017-11-16 jeu 14:52</p>
+</section>
+
+<section>
+<section id="slide-orge6b21f4">
+<h2 id="orge6b21f4">Le problème</h2>
+<div class="outline-text-2" id="text-orge6b21f4">
+</div>
+</section>
+<section id="slide-org408bbcf" data-background="https://media.giphy.com/media/2RiU1RUjyh4C4/giphy.gif" data-background-transition="slide">
+<h3 id="org408bbcf">Les pointeurs</h3>
+
+</section>
+<section id="slide-org06dc51c">
+<h3 id="org06dc51c">Les pointeurs sont</h3>
+<ul>
+<li class="fragment">géniaux</li>
+<li class="fragment">puissants</li>
+<li class="fragment">et pourtant&#x2026;</li>
+
+</ul>
+
+<p class="fragment (t)">
+la 1ère source de bugs!
+</p>
+
+</section>
+<section id="slide-orgf8d98ed">
+<h3 id="orgf8d98ed">Pointeurs et C++</h3>
+<p class="fragment (t)">
+<code>new</code> et <code>delete</code> sont sur un bateau&#x2026;
+</p>
+
+<div class="org-src-container">
+
+<pre class="fragment (t)"><code class="c++" >MyType* mytype_pointer = new MyType;
+
+...
+
+delete mytype_pointer;
+</code></pre>
+</div>
+
+<p class="fragment (t)">
+&#x2026; <code>delete</code> tombe à l'eau!
+</p>
+
+<p class="fragment (t)">
+Qu'est-ce qui reste?
+</p>
+
+</section>
+<section id="slide-org515470e">
+<h3 id="org515470e">Des bugs!</h3>
+<ul>
+<li class="fragment">Oublier 'delete' = perte mémoire<br />
+<i>(catastrophe sur un système avec peu de ressources)</i></li>
+<li class="fragment"><code>delete</code> sur un nullptr = crash</li>
+<li class="fragment"><code>delete</code> sur un pointeur invalide = crash</li>
+<li class="fragment"><code>delete</code> de trop = crash</li>
+<li class="fragment"><code>delete</code> sur le mauvais objet = c'est la 4ième dimension!</li>
+
+</ul>
+
+</section>
+<section id="slide-orge98cfff" data-background="https://media.giphy.com/media/rW6pMWrNZ2cPm/giphy.gif" data-background-transition="slide">
+<h3 id="orge98cfff">Allocation et destruction</h3>
+<p class="fragment grow">
+Une paire indissociable
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-org2410a8d">
+<h2 id="org2410a8d">Solution?</h2>
+<p>
+(adapté au C++)
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-org5ee20bd">
+<h2 id="org5ee20bd"><b>R. A. I. I.</b></h2>
+</section>
+<section >
+
+<p>
+Ressource Acquisition Is Initialization
+</p>
+
+<p class="fragment shrink">
+TL;DR: Associer la vie d'une ressource à celle d'un objet
+</p>
+
+<div class="org-src-container">
+
+<pre class="fragment appear"><code class="c++" >class MyType_RAII {
+public:
+	MyType_RAII() {
+		// Acquisition des ressources
+		...
+	}
+
+	~MyType_RAII() {
+		// Libération des ressources
+		...
+	}
+};
+
+{
+	MyType_RAII my_var; // allocation sur la pile
+	do_something(my_var);
+} // ~MyType_RAII() appelé ici => libération des ressources
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org04c59f6">
+<h3 id="org04c59f6">Bénéfices</h3>
+<ul>
+<li class="fragment">éviter l'oublis de l'associativité (bug!)</li>
+<li class="fragment">simplifier la maintenance du code</li>
+<li class="fragment">simplifier la gestion des "cas de sortie" d'une routine</li>
+
+</ul>
+
+<p class="fragment (t)">
+<b>surtout avec les exceptions!</b>
+</p>
+
+<div class="org-src-container">
+
+<pre class="fragment (t)"><code class="c++" >{
+	do_bad_things(new MyType); // perte si exception
+
+	MyType* ptr = new MyType; // alloué sur la stack
+
+	if (isError())
+		throw std::runtime_error("Error!"); // perte!
+
+	do_something_that_throw(); // perte!
+} // perte!
+</code></pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-org2daede0">
+<h2 id="org2daede0">RAII et pointeurs</h2>
+<div class="org-src-container">
+
+<pre><code class="c++" >class MyTypeSafePtr {
+public:
+	MyTypeSafePtr() : ptr {new MyType} {}
+	~MyTypeSafePtr() { delete ptr; }
+
+	MyTypeSafePtr* ptr;
+};
+</code></pre>
+</div>
+
+</section>
+<section >
+
+<p>
+Utilisation
+</p>
+<div class="org-src-container">
+
+<pre><code class="c++" >// Bon vieux C++98...
+MyTypeSafePtr* my_ptr = MyTypeSafePtr();
+
+// ...C++11
+auto my_ptr = MyTypeSafePtr();
+
+do_something(my_ptr.ptr);
+my_ptr.ptr->do_something_else();
+</code></pre>
+</div>
+<p>
+323
+</p>
+</section>
+</section>
+<section>
+<section id="slide-org4473be5">
+<h2 id="org4473be5">Et c'est tout?</h2>
+<div class="outline-text-2" id="text-org4473be5">
+</div>
+</section>
+<section id="slide-orgcaeaa0f">
+<h3 id="orgcaeaa0f">Amélioration #1</h3>
+<p>
+concept de <i>propriété</i>
+</p>
+
+<ul>
+<li class="fragment">Posséder c'est décider de la durée de vie de l'objet</li>
+<li class="fragment">J'utilise la ressource et je peux la prêter</li>
+<li class="fragment">Je peux céder ma ressource à un autre propriétaire</li>
+
+</ul>
+
+</section>
+<section >
+
+<p>
+Unicité
+</p>
+<div class="org-src-container">
+
+<pre><code class="c++" >class MyTypeSafePtr {
+private:
+	MyType* ptr_; // plus d'accès direct
+public:
+	MyTypeSafePtr() ptr_ { new MyType } {}
+	~MyTypeSafePtr() { if (ptr_) delete ptr_; }
+
+	// accès au pointeur (/!\ pointeur nu = non-propriétaire)
+	MyType* get() const { return ptr_; }
+
+	// transfert de la propriété
+	MyType* release() noexcept {
+		auto t = ptr_;
+		ptr_ = nullptr;
+		return t;
+	}
+};
+</code></pre>
+</div>
+
+</section>
+<section >
+
+<p>
+Utilisation
+</p>
+<div class="org-src-container">
+
+<pre><code class="c++" >auto my_ptr = MyTypeSafePtr();
+
+// do_something(MyType* p)
+do_something(my_ptr.get());
+
+// take_ownership(MyType* p)
+take_ownership(my_ptr.release());
+
+// indirection
+my_ptr.get().mytype_method();
+</code></pre>
+</div>
+
+</section>
+<section id="slide-orga71a834">
+<h3 id="orga71a834">Amélioration #2</h3>
+<p>
+Oublier l'effet <i>conteneur</i>
+</p>
+
+<ul>
+<li class="fragment"><code>my_ptr.get()</code>  =&gt; pas très élégant</li>
+<li class="fragment">Mimer l'utilisation des pointeurs <i>bruts</i></li>
+
+</ul>
+
+<div class="org-src-container">
+
+<pre class="fragment (t)"><code class="c++" >class MyTypeSafePtr {
+	...
+
+	// Déréférencement : *instance
+	MyType& operator* () const {
+		assert(get() != nullptr);
+		return *ptr_;
+	}
+
+	// Indirection: instance->xxx
+	MyTypr* operator-> () const noexcept { return ptr_; }
+};
+</code></pre>
+</div>
+
+</section>
+<section >
+
+<div class="org-src-container">
+
+<pre><code class="c++" >auto my_ptr = MyTypeSafePtr();
+
+my_ptr->do_something(); // par indirection
+foo(*my_ptr); // par réference
+</code></pre>
+</div>
+
+<p>
+(Beaucoup mieux)
+</p>
+
+</section>
+<section id="slide-org26a032d">
+<h3 id="org26a032d">Amélioration #3</h3>
+<p>
+Programmation générique =&gt; <b>template</b>
+</p>
+
+<div class="org-src-container">
+
+<pre><code class="c++" >template< typename T >
+class MyUniquePtr {
+public:
+	using pointer = T*;
+	MyUniquePtr(pointer p) : p_ {p} {}
+	~MyUniquePtr() { if (p_) delete _p; }
+	T& operator*() const { ... }
+	T* operator->() const noexcept { ... }
+
+	...
+
+private:
+	pointer p_ {nullptr};
+};
+</code></pre>
+</div>
+
+</section>
+<section >
+
+<p>
+Utilisation
+</p>
+<div class="org-src-container">
+
+<pre><code class="c++" >auto my_ptr = MyUniquePtr< MyType >(new MyType);
+</code></pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-orgf358704">
+<h2 id="orgf358704">Trop de code pour vous?</h2>
+<ul>
+<li>&lt;memory&gt; de la STL (Standard Template Library)</li>
+<li>Depuis C++11</li>
+
+</ul>
+
+</section>
+<section id="slide-org5a70758">
+<h3 id="org5a70758"><code>std::unique_ptr&lt;&gt;</code></h3>
+<ul>
+<li class="fragment">Propriété unique sur un pointeur</li>
+<li class="fragment">Comme notre exemple précédent mais en mieux
+<ul>
+<li>Copie impossible (vérification à la compilation)</li>
+<li>Supporte la sémantique <i>moveable</i> du C++11</li>
+<li>C++14 =&gt; <code>std::make_unique()</code></li>
+
+</ul></li>
+<li class="fragment">Exemples d'utilisations:
+<ul>
+<li>A la place d'un <code>new</code> <b>nu</b> (protection des fuites mémoire)</li>
+<li>Comme membre de classe pour garder une ressource</li>
+<li>Parfait pour l'idiome <i>pimpl</i></li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org2377f55">
+<h3 id="org2377f55"><code>std::shared_ptr&lt;&gt;</code></h3>
+<ul>
+<li class="fragment">A utiliser quand on ne sais pas qui est le responsable</li>
+<li class="fragment">Plus complexe qu'un <code>std::unique_ptr</code>
+<ul>
+<li>besoin d'un <b>compteur de référence</b>
+<ul>
+<li>la copie incrémente le compteur</li>
+<li>le dtor décrémente le compteur</li>
+<li>compteur à 0 =&gt; l'objet pointé est détruit (delete)</li>
+
+</ul></li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org99788a2">
+<h3 id="org99788a2"><code>std::weak_ptr&lt;&gt;</code></h3>
+<ul>
+<li class="fragment">Avoir l'accès à un <code>shared_ptr</code> sans augmenter le compteur de référence</li>
+<li class="fragment">Concept de "vue"</li>
+<li class="fragment">Exemple: implémenter un <b>cache</b></li>
+<li class="fragment">On utilise la méthode <code>lock()</code> pour obtenir un <code>shared_ptr</code></li>
+
+</ul>
+
+<div class="org-src-container">
+
+<pre class="fragment (t)"><code class="c++" >if (auto shared = weak.lock()) {
+	// shared bloque la destruction de la mémoire pointée
+	// et le scope de ce shared_ptr n'est valable qu'ici
+}
+</code></pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-orgd6f2119">
+<h2 id="orgd6f2119">Performances</h2>
+<div class="outline-text-2" id="text-orgd6f2119">
+</div>
+</section>
+<section id="slide-org8f01512">
+<h3 id="org8f01512"><code>std::unique_ptr&lt;&gt;</code></h3>
+<p>
+<b>Almost Zero-Overhead</b>
+</p>
+
+<ul>
+<li class="fragment">Aussi performant qu'un pointeur <i>brut</i></li>
+<li class="fragment">Son seul membre est un simple pointer</li>
+<li class="fragment">Le compilateur ne gardera que la sémantique d'un pointeur simple</li>
+<li class="fragment">&#x2026; et il rajoute le <code>delete</code> là où vous l'auriez <del>oublié</del> mis</li>
+
+</ul>
+
+</section>
+<section id="slide-org63c68aa">
+<h3 id="org63c68aa"><code>std::shared_ptr&lt;&gt;</code></h3>
+<ul>
+<li class="fragment">Beaucoup moins performant que <code>std::unique_ptr</code></li>
+<li class="fragment">Contient un compteur et un <i>mutex</i></li>
+<li class="fragment">Le mutex gére l'accès conccurentiel au compteur</li>
+<li class="fragment">/!\ seul ce compteur est protégé, pas l'objet pointé!</li>
+
+</ul>
+
+</section>
+<section id="slide-org5db257d">
+<h3 id="org5db257d"><code>std::weak_ptr&lt;&gt;</code></h3>
+<ul>
+<li class="fragment">Référence sur la mémoire partagée</li>
+<li class="fragment">Accéde aussi au mutex partagé entre les shared<sub>ptr</sub>&lt;&gt;</li>
+
+</ul>
+
+</section>
+</section>
+<section>
+<section id="slide-org2415f45">
+<h2 id="org2415f45">La fin du pointeur brut?</h2>
+<p class="fragment (t)">
+Non! Tout comme la référence (&amp;) il transporte une information utile
+</p>
+
+<p class="fragment (t)">
+Il indique clairement que vous n'êtes pas le propriétaire<br />
+(pas de <code>delete</code> dessus)
+</p>
+
+</section>
+<section id="slide-org5cef482">
+<h3 id="org5cef482">Règles avec le passage en arguments</h3>
+<ol>
+<li class="fragment">Préférez &amp;, ou * (pour indiquer une possible valeur à nullptr)</li>
+<li class="fragment">Pas de <i>smart pointer</i> sauf si vous utilisez/modifiez ce dernier</li>
+
+</ol>
+
+</section>
+</section>
+<section>
+<section id="slide-org59a47a0">
+<h2 id="org59a47a0">Pièges</h2>
+<p>
+Quelques exemples à ne pas suivre&#x2026;
+</p>
+
+</section>
+<section id="slide-org44987cf">
+<h3 id="org44987cf">Vol de pointeur</h3>
+<div class="org-src-container">
+
+<pre><code class="c++" >void method(const Widget& widget)
+{
+	privateMember_ = std::unique_ptr< Widget >(&widget);
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org404fc76">
+<h3 id="org404fc76">Solution miracle</h3>
+<div class="outline-text-3" id="text-org404fc76">
+</div>
+</section>
+<section id="slide-org9b2958d">
+<h4 id="org9b2958d">Quel est/sont le/les problème(s)?</h4>
+<div class="org-src-container">
+
+<pre><code class="c++" >void foo(std::unique_ptr< Widget > w1,
+	 std::unique_ptr< Widget > w2);
+
+foo(new Widget1, new Widget2);
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org8c958d3">
+<h4 id="org8c958d3">Est-ce mieux?</h4>
+<div class="org-src-container">
+
+<pre><code class="c++" >void foo(std::unique_ptr< Widget > w1,
+	 std::unique_ptr< Widget > w2);
+
+foo(std::unique_ptr< Widget >(new Widget),
+  std::unique_ptr< Widget >(new Widget));
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org1f808bd">
+<h4 id="org1f808bd">La bonne solution&#x2026;</h4>
+<div class="org-src-container">
+
+<pre><code class="c++" >void foo(std::unique_ptr< Widget > w1,
+	 std::unique_ptr< Widget > w2);
+
+foo(std::make_unique< Widget >(),
+  std::make_unique< Widget >());
+</code></pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-orga4e4e05">
+<h2 id="orga4e4e05">A retenir</h2>
+<p>
+Ordre d'utilisation des trois <i>smart-pointers</i>
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+</colgroup>
+
+<colgroup>
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">type</th>
+<th scope="col" class="org-left">quand?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left"><code>unique_ptr</code></td>
+<td class="org-left">souvent, plus de <code>new</code> dit <b>nu</b></td>
+</tr>
+
+<tr>
+<td class="org-left"><code>shared_ptr</code></td>
+<td class="org-left">partage de la propriété, avec précaution (1)</td>
+</tr>
+
+<tr>
+<td class="org-left"><code>weak_ptr</code></td>
+<td class="org-left">pour les cas particuliers (1), ex: cache</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+<i>(1) Le mutex est coûteux!</i>
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-org17309e6">
+<h2 id="org17309e6">Plus de détails</h2>
+<p>
+La référence<br />
+<a href="http://en.cppreference.com/w/cpp/memory">http://en.cppreference.com/w/cpp/memory</a>
+</p>
+
+<p>
+Ma source sur le sujet<br />
+<a href="https://herbsutter.com/gotw/">https://herbsutter.com/gotw/</a>
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-orgbcd10e5" data-background="https://media.giphy.com/media/aZKNik5nLC8Mw/giphy-downsized-large.gif" data-background-transition="slide">
+<h2 id="orgbcd10e5">Questions</h2>
+
+</section>
+</section>
+<section>
+<section id="slide-orgc662334">
+<h2 id="orgc662334">merci</h2>
+<p>
+Source Images: giphy.com
+Edité avec Emacs 25.2.1
+Présentation: Org + reveal.js
+</p>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/reveal.js/3.0.0/lib/js/head.min.js"></script>
+<script src="https://cdn.jsdelivr.net/reveal.js/3.0.0/js/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+
+controls: true,
+progress: true,
+history: false,
+center: true,
+slideNumber: 'c',
+rollingLinks: false,
+keyboard: true,
+overview: true,
+
+theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+transitionSpeed: 'default',
+multiplex: {
+    secret: '', // null if client
+    id: '', // id, obtained from socket.io server
+    url: '' // Location of socket.io server
+},
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/reveal.js/3.0.0/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }]
+});
+</script>
+</body>
+</html>

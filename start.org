@@ -1,0 +1,419 @@
+#+TITLE: Smart-Pointers
+#+OPTIONS: toc:nil num:nil
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/reveal.js/3.0.0/
+#+REVEAL_THEME: league
+#+REVEAL_PLUGINS: (highlight)
+
+* Le problème
+
+** Les pointeurs
+:PROPERTIES:
+:reveal_background: https://media.giphy.com/media/2RiU1RUjyh4C4/giphy.gif
+:reveal_background_trans: slide
+:END:
+
+** Les pointeurs sont
+
+#+ATTR_REVEAL: :frag (t)
+- géniaux
+- puissants
+- et pourtant...
+
+#+ATTR_REVEAL: :frag (t)
+la 1ère source de bugs!
+
+** Pointeurs et C++
+
+#+ATTR_REVEAL: :frag (t)
+~new~ et ~delete~ sont sur un bateau...
+
+#+ATTR_REVEAL: :frag (t)
+#+BEGIN_SRC c++
+  MyType* mytype_pointer = new MyType;
+
+  ...
+
+  delete mytype_pointer;
+#+END_SRC
+
+#+ATTR_REVEAL: :frag (t)
+... ~delete~ tombe à l'eau!
+
+#+ATTR_REVEAL: :frag (t)
+Qu'est-ce qui reste?
+
+** Des bugs!
+
+#+ATTR_REVEAL: :frag (t)
+- Oublier 'delete' = perte mémoire\\
+  /(catastrophe sur un système avec peu de ressources)/
+- ~delete~ sur un nullptr = crash
+- ~delete~ sur un pointeur invalide = crash
+- ~delete~ de trop = crash
+- ~delete~ sur le mauvais objet = c'est la 4ième dimension!
+
+** Allocation et destruction
+:PROPERTIES:
+:reveal_background: https://media.giphy.com/media/rW6pMWrNZ2cPm/giphy.gif
+:reveal_background_trans: slide
+:END:
+
+#+ATTR_REVEAL: :frag grow
+Une paire indissociable
+
+* Solution?
+
+(adapté au C++)
+
+* *R. A. I. I.*
+
+#+REVEAL: split
+
+Ressource Acquisition Is Initialization
+
+#+ATTR_REVEAL: :frag shrink
+TL;DR: Associer la vie d'une ressource à celle d'un objet
+
+#+ATTR_REVEAL: :frag appear
+#+BEGIN_SRC c++
+  class MyType_RAII {
+  public:
+	  MyType_RAII() {
+		  // Acquisition des ressources
+		  ...
+	  }
+
+	  ~MyType_RAII() {
+		  // Libération des ressources
+		  ...
+	  }
+  };
+
+  {
+	  MyType_RAII my_var; // allocation sur la pile
+	  do_something(my_var);
+  } // ~MyType_RAII() appelé ici => libération des ressources
+#+END_SRC
+
+** Bénéfices
+
+#+ATTR_REVEAL: :frag (t)
+- éviter l'oublis de l'associativité (bug!)
+- simplifier la maintenance du code
+- simplifier la gestion des "cas de sortie" d'une routine
+
+#+ATTR_REVEAL: :frag (t)
+*surtout avec les exceptions!*
+
+#+ATTR_REVEAL: :frag (t)
+#+BEGIN_SRC c++
+  {
+	  do_bad_things(new MyType); // perte si exception
+
+	  MyType* ptr = new MyType; // alloué sur la stack
+
+	  if (isError())
+		  throw std::runtime_error("Error!"); // perte!
+
+	  do_something_that_throw(); // perte!
+  } // perte!
+#+END_SRC
+
+* RAII et pointeurs
+
+#+BEGIN_SRC c++
+  class MyTypeSafePtr {
+  public:
+	  MyTypeSafePtr() : ptr {new MyType} {}
+	  ~MyTypeSafePtr() { delete ptr; }
+
+	  MyTypeSafePtr* ptr;
+  };
+#+END_SRC
+
+#+REVEAL: split
+
+Utilisation
+#+BEGIN_SRC c++
+  // Bon vieux C++98...
+  MyTypeSafePtr* my_ptr = MyTypeSafePtr();
+
+  // ...C++11
+  auto my_ptr = MyTypeSafePtr();
+
+  do_something(my_ptr.ptr);
+  my_ptr.ptr->do_something_else();
+#+END_SRC
+323
+* Et c'est tout?
+** Amélioration #1
+
+concept de /propriété/
+
+#+ATTR_REVEAL: :frag (t)
+- Posséder c'est décider de la durée de vie de l'objet
+- J'utilise la ressource et je peux la prêter
+- Je peux céder ma ressource à un autre propriétaire
+
+#+REVEAL: split
+
+Unicité
+#+BEGIN_SRC c++
+  class MyTypeSafePtr {
+  private:
+	  MyType* ptr_; // plus d'accès direct
+  public:
+	  MyTypeSafePtr() ptr_ { new MyType } {}
+	  ~MyTypeSafePtr() { if (ptr_) delete ptr_; }
+
+	  // accès au pointeur (/!\ pointeur nu = non-propriétaire)
+	  MyType* get() const { return ptr_; }
+
+	  // transfert de la propriété
+	  MyType* release() noexcept {
+		  auto t = ptr_;
+		  ptr_ = nullptr;
+		  return t;
+	  }
+  };
+#+END_SRC
+
+#+REVEAL: split
+
+Utilisation
+#+BEGIN_SRC c++
+  auto my_ptr = MyTypeSafePtr();
+
+  // do_something(MyType* p)
+  do_something(my_ptr.get());
+
+  // take_ownership(MyType* p)
+  take_ownership(my_ptr.release());
+
+  // indirection
+  my_ptr.get().mytype_method();
+#+END_SRC
+
+** Amélioration #2
+
+Oublier l'effet /conteneur/
+
+#+ATTR_REVEAL: :frag (t)
+- ~my_ptr.get()~  => pas très élégant
+- Mimer l'utilisation des pointeurs /bruts/
+
+#+ATTR_REVEAL: :frag (t)
+#+BEGIN_SRC c++
+  class MyTypeSafePtr {
+      ...
+
+	  // Déréférencement : *instance
+	  MyType& operator* () const {
+		  assert(get() != nullptr);
+		  return *ptr_;
+	  }
+
+	  // Indirection: instance->xxx
+	  MyTypr* operator-> () const noexcept { return ptr_; }
+  };
+#+END_SRC
+
+#+REVEAL: split
+
+#+BEGIN_SRC c++
+  auto my_ptr = MyTypeSafePtr();
+
+  my_ptr->do_something(); // par indirection
+  foo(*my_ptr); // par réference
+#+END_SRC
+
+(Beaucoup mieux)
+
+** Amélioration #3
+
+Programmation générique => *template*
+
+#+BEGIN_SRC c++
+  template< typename T >
+  class MyUniquePtr {
+  public:
+	  using pointer = T*;
+	  MyUniquePtr(pointer p) : p_ {p} {}
+	  ~MyUniquePtr() { if (p_) delete _p; }
+	  T& operator*() const { ... }
+	  T* operator->() const noexcept { ... }
+
+	  ...
+
+  private:
+	  pointer p_ {nullptr};
+  };
+#+END_SRC
+
+#+REVEAL: split
+
+Utilisation
+#+BEGIN_SRC c++
+  auto my_ptr = MyUniquePtr< MyType >(new MyType);
+#+END_SRC
+
+* Trop de code pour vous?
+
+- <memory> de la STL (Standard Template Library)
+- Depuis C++11
+
+** ~std::unique_ptr<>~
+
+#+ATTR_REVEAL: :frag (t)
+- Propriété unique sur un pointeur
+- Comme notre exemple précédent mais en mieux
+  + Copie impossible (vérification à la compilation)
+  + Supporte la sémantique /moveable/ du C++11
+  + C++14 => ~std::make_unique()~
+- Exemples d'utilisations:
+  + A la place d'un ~new~ *nu* (protection des fuites mémoire)
+  + Comme membre de classe pour garder une ressource
+  + Parfait pour l'idiome /pimpl/
+
+** ~std::shared_ptr<>~
+
+#+ATTR_REVEAL: :frag (t)
+- A utiliser quand on ne sais pas qui est le responsable
+- Plus complexe qu'un ~std::unique_ptr~
+  + besoin d'un *compteur de référence*
+	+ la copie incrémente le compteur
+	+ le dtor décrémente le compteur
+	+ compteur à 0 => l'objet pointé est détruit (delete)
+
+** ~std::weak_ptr<>~
+
+#+ATTR_REVEAL: :frag (t)
+- Avoir l'accès à un ~shared_ptr~ sans augmenter le compteur de référence
+- Concept de "vue"
+- Exemple: implémenter un *cache*
+- On utilise la méthode ~lock()~ pour obtenir un ~shared_ptr~
+
+#+ATTR_REVEAL: :frag (t)
+#+BEGIN_SRC c++
+  if (auto shared = weak.lock()) {
+	  // shared bloque la destruction de la mémoire pointée
+	  // et le scope de ce shared_ptr n'est valable qu'ici
+  }
+#+END_SRC
+
+* Performances
+** ~std::unique_ptr<>~
+
+*Almost Zero-Overhead*
+
+#+ATTR_REVEAL: :frag (t)
+- Aussi performant qu'un pointeur /brut/
+- Son seul membre est un simple pointer
+- Le compilateur ne gardera que la sémantique d'un pointeur simple
+- ... et il rajoute le ~delete~ là où vous l'auriez +oublié+ mis
+
+** ~std::shared_ptr<>~
+
+#+ATTR_REVEAL: :frag (t)
+- Beaucoup moins performant que ~std::unique_ptr~
+- Contient un compteur et un /mutex/
+- Le mutex gére l'accès conccurentiel au compteur
+- /!\ seul ce compteur est protégé, pas l'objet pointé!
+
+** ~std::weak_ptr<>~
+
+#+ATTR_REVEAL: :frag (t)
+- Référence sur la mémoire partagée
+- Accéde aussi au mutex partagé entre les shared_ptr<>
+
+* La fin du pointeur brut?
+
+#+ATTR_REVEAL: :frag (t)
+Non! Tout comme la référence (&) il transporte une information utile
+
+#+ATTR_REVEAL: :frag (t)
+Il indique clairement que vous n'êtes pas le propriétaire\\
+(pas de ~delete~ dessus)
+
+** Règles avec le passage en arguments
+
+#+ATTR_REVEAL: :frag (t)
+1) Préférez &, ou * (pour indiquer une possible valeur à nullptr)
+2) Pas de /smart pointer/ sauf si vous utilisez/modifiez ce dernier
+
+* Pièges
+
+Quelques exemples à ne pas suivre...
+
+** Vol de pointeur
+
+#+BEGIN_SRC c++
+  void method(const Widget& widget)
+  {
+	  privateMember_ = std::unique_ptr< Widget >(&widget);
+  }
+#+END_SRC
+
+** Solution miracle
+
+*** Quel est/sont le/les problème(s)?
+
+#+BEGIN_SRC c++
+	void foo(std::unique_ptr< Widget > w1,
+         std::unique_ptr< Widget > w2);
+
+	foo(new Widget1, new Widget2);
+#+END_SRC
+
+*** Est-ce mieux?
+
+#+BEGIN_SRC c++
+  void foo(std::unique_ptr< Widget > w1,
+       std::unique_ptr< Widget > w2);
+
+  foo(std::unique_ptr< Widget >(new Widget),
+	std::unique_ptr< Widget >(new Widget));
+#+END_SRC
+
+*** La bonne solution...
+
+#+BEGIN_SRC c++
+  void foo(std::unique_ptr< Widget > w1,
+       std::unique_ptr< Widget > w2);
+
+  foo(std::make_unique< Widget >(),
+	std::make_unique< Widget >());
+#+END_SRC
+
+* A retenir
+
+Ordre d'utilisation des trois /smart-pointers/
+
+| type         | quand?                                       |
+|--------------+----------------------------------------------|
+| /            | <                                            |
+| ~unique_ptr~ | souvent, plus de ~new~ dit *nu*              |
+| ~shared_ptr~ | partage de la propriété, avec précaution (1) |
+| ~weak_ptr~   | pour les cas particuliers (1), ex: cache     |
+
+/(1) Le mutex est coûteux!/
+
+* Plus de détails
+
+La référence\\
+http://en.cppreference.com/w/cpp/memory
+
+Ma source sur le sujet\\
+https://herbsutter.com/gotw/
+
+* Questions
+:PROPERTIES:
+:reveal_background: https://media.giphy.com/media/aZKNik5nLC8Mw/giphy-downsized-large.gif
+:reveal_background_trans: slide
+:END:
+
+* merci
+
+Source Images: giphy.com
+Edité avec Emacs 25.2.1
+Présentation: Org + reveal.js
